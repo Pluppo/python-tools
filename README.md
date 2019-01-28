@@ -7,12 +7,9 @@ get-mac-arp.py - gets arp and mac tables from router and switches, and outputs a
 
 Populate devices.csv file, example:
 
-host,ip,device_type,mac,arp
-
-R1,10.10.10.1,cisco_ios,,yes
-
-SW1,10.10.10.2,cisco_ios,yes,yes
-
+host,ip,device_type,mac,arp<br/>
+R1,10.10.10.1,cisco_ios,,yes<br/>
+SW1,10.10.10.2,cisco_ios,yes,yes<br/>
 SW2,10.10.10.3,cisco_nxos,yes,
 
 Explanation of cells:
