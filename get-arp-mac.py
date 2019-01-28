@@ -5,6 +5,7 @@ from getpass import getpass
 import re
 import csv
 import datetime
+import readline
 
 #Define dictionary for replacing interface strings:
 int_dict = {'Port-channel': 'Po', 'FastEthernet': 'Fa', 'GigabitEthernet': 'Gi', 'TenGigabitEthernet': 'Te'}
