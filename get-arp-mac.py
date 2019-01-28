@@ -54,7 +54,7 @@ mac_arp=[]
 #Get and process data from devices
 for device in device_list:
     name =  device['host']
-    ip = name =  device['ip']
+    ip = device['ip']
     device_type = device['device_type']
     print('Getting data from ' + device['host'])
     net_connect = Netmiko(ip=ip, username=username, password=password, device_type=device_type)
@@ -76,7 +76,7 @@ for device in device_list:
 
 #Define output csv keys and filename
 csv_keys = mac_arp[0].keys()
-filename = 'output/' + multiple_replace(nospace_dict, 'mac_arp_' + str(datetime.datetime.now())) + '.csv'
+filename = 'output/mac_arp_' + multiple_replace(nospace_dict, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")) + '.csv'
 
 #Output data to csv
 with open(filename, 'w') as f:
