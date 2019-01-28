@@ -57,21 +57,30 @@ for device in device_list:
     ip = device['ip']
     device_type = device['device_type']
     print('Getting data from ' + device['host'])
+    #Connect to device using info from device.csv and entered credentials
     net_connect = Netmiko(ip=ip, username=username, password=password, device_type=device_type)
+    #Collect arp data if arp cell is not empty
     if device['arp'] != '':
-        if device['device_type'] == 'cisco_ios':
-            show_vrf = net_connect.send_command('show vrf', use_textfsm=True)
-            for vrf in show_vrf:
-                vrf = vrf['name']
-                show_arp = net_connect.send_command('show ip arp vrf ' + vrf, use_textfsm=True)
+        #Get list of vrf
+        show_vrf = net_connect.send_command('show vrf', use_textfsm=True)
+        #Get arp table for each vrf
+        for vrf in show_vrf:
+            vrf = vrf['name']
+            show_arp = net_connect.send_command('show ip arp vrf ' + vrf, use_textfsm=True)
+            #Check that data is list before appending (empty arp will be str)
+            if type(show_arp) == list:
                 append_arp(show_arp)
+        #For IOS, get default route table
+        if device_type == 'cisco_ios':
             vrf = 'default'
             show_arp = net_connect.send_command('show ip arp', use_textfsm=True)
             append_arp(show_arp)
+    #Collect mac data if mac cell is not empty
     if device['mac'] != '':
         show_mac = net_connect.send_command('show mac address-table', use_textfsm=True)
         show_status = net_connect.send_command('show interface status', use_textfsm=True)
         append_mac(show_mac, show_status)
+    #Disconnect from device
     net_connect.disconnect()
 
 #Define output csv keys and filename
