@@ -1,11 +1,13 @@
 #!/usr/bin/env python3.6
 
 from netmiko import Netmiko
+from netmiko.ssh_exception import NetMikoAuthenticationException, NetMikoTimeoutException
 from getpass import getpass
 import re
 import csv
 import datetime
 import readline
+import sys
 
 #Define dictionary for replacing interface strings:
 int_dict = {'Port-channel': 'Po', 'FastEthernet': 'Fa', 'GigabitEthernet': 'Gi', 'TenGigabitEthernet': 'Te'}
@@ -59,7 +61,18 @@ for device in device_list:
     device_type = device['device_type']
     print('Getting data from ' + device['host'])
     #Connect to device using info from device.csv and entered credentials
-    net_connect = Netmiko(ip=ip, username=username, password=password, device_type=device_type)
+    try:
+        net_connect = Netmiko(ip=ip, username=username, password=password, device_type=device_type)
+    except NetMikoTimeoutException as timeout_error:
+        print('*'*80)
+        print(timeout_error)
+        print('*'*80)
+        sys.exit(1)
+    except NetMikoAuthenticationException as auth_error:
+        print('*'*80)
+        print(auth_error)
+        print('*'*80)
+        sys.exit(1)
     #Collect arp data if arp cell is not empty
     if device['arp'] != '':
         #Get list of vrf
