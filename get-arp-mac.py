@@ -7,7 +7,7 @@ import csv
 import datetime
 
 #Define dictionary for replacing interface strings:
-int_dict = {'Port-channel': 'Po', 'GigabitEthernet': 'Gi', 'TenGigabitEthernet': 'Te'}
+int_dict = {'Port-channel': 'Po', 'FastEthernet': 'Fa', 'GigabitEthernet': 'Gi', 'TenGigabitEthernet': 'Te'}
 nospace_dict = {' ': '_', ':': '-'}
 novlan_dict = {'Vlan': ''}
 
