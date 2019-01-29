@@ -9,6 +9,10 @@ import datetime
 import readline
 import sys
 
+#Get username and password
+username = input('Username: ')
+password = getpass()
+
 #Define dictionary for replacing interface strings:
 int_dict = {'Port-channel': 'Po', 'FastEthernet': 'Fa', 'GigabitEthernet': 'Gi', 'TenGigabitEthernet': 'Te'}
 nospace_dict = {' ': '_', ':': '-'}
@@ -19,11 +23,12 @@ def multiple_replace(dict, text):
     regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
     return regex.sub(lambda mo: dict[mo.string[mo.start():mo.end()]], text)
 
-#Define functions for appendind dictionaries to mac_arp list:
+#Define functions for appending dictionaries to mac_arp list:
 def append_mac(show_mac, show_status):
     for mac_entry in show_mac:
         if device['device_type'] == 'cisco_ios':
-            port = multiple_replace(int_dict, mac_entry['destination_port']) #Replace long interface names with short names (example: 'GigabitEthernet' to 'Gi')
+            #Replace long interface names with short names (example: 'GigabitEthernet' to 'Gi')
+            port = multiple_replace(int_dict, mac_entry['destination_port'])
             mac = mac_entry['destination_address']
             vlan =  mac_entry['vlan']
         elif device['device_type'] == 'cisco_nxos':
@@ -31,7 +36,8 @@ def append_mac(show_mac, show_status):
             mac = mac_entry['mac']
             vlan =  mac_entry['vlan']
         for status_entry in show_status:
-            if status_entry['port'] == port: #Match interface from show interface status with show mac address-table to exctract relevant port description
+            #Match interface from show interface status with show mac address-table to exctract relevant port description
+            if status_entry['port'] == port:
                 des = status_entry['name']
                 mac_arp.append({'mac': mac, 'vlan': vlan, 'switch': name, 'port': port, 'description': des, 'IP': '', 'vrf': ''})
 
@@ -42,12 +48,7 @@ def append_arp(show_arp):
         ip = arp_entry['address']
         mac_arp.append({'mac': mac, 'vlan': vlan, 'switch': name, 'port': '', 'description': 'ARP', 'IP': ip, 'vrf': vrf})
 
-
-#Get username and password
-username = input('Username: ') 
-password = getpass()
-
-#Import devices from csv, required fields: host,ip,device_type,mac,arp. Keep mac and arp blank if not neeed
+#Import devices from csv, required fields: host,ip,device_type
 with open('devices.csv') as f: 
     device_list = [{k: v for k,v in row.items()} for row in csv.DictReader(f, skipinitialspace=True)]
 
@@ -76,7 +77,9 @@ for device in device_list:
     #Collect show mac address-table and show interface status
     show_mac = net_connect.send_command('show mac address-table', use_textfsm=True)
     show_status = net_connect.send_command('show interface status', use_textfsm=True)
-    append_mac(show_mac, show_status)
+    #Check that data is list before appending (error output will be str)
+    if type(show_mac) and type(show_status) == list:
+        append_mac(show_mac, show_status)
     #Get list of vrf
     show_vrf = net_connect.send_command('show vrf', use_textfsm=True)
     #Check that data is list before continuing (error output will be str)
