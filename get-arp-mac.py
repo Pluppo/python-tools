@@ -73,10 +73,14 @@ for device in device_list:
         print(auth_error)
         print('*'*80)
         sys.exit(1)
+    #Collect show mac address-table and show interface status
+    show_mac = net_connect.send_command('show mac address-table', use_textfsm=True)
+    show_status = net_connect.send_command('show interface status', use_textfsm=True)
+    append_mac(show_mac, show_status)
     #Get list of vrf
     show_vrf = net_connect.send_command('show vrf', use_textfsm=True)
     #Check that data is list before continuing (error output will be str)
-    if (show_vrf) == list:
+    if type(show_vrf) == list:
         #Get arp table for each vrf
         for vrf in show_vrf:
             vrf = vrf['name']
@@ -89,10 +93,6 @@ for device in device_list:
             vrf = 'default'
             show_arp = net_connect.send_command('show ip arp', use_textfsm=True)
             append_arp(show_arp)
-    #Collect show mac address-table and show interface status
-    show_mac = net_connect.send_command('show mac address-table', use_textfsm=True)
-    show_status = net_connect.send_command('show interface status', use_textfsm=True)
-    append_mac(show_mac, show_status)
     #Disconnect from device
     net_connect.disconnect()
 
