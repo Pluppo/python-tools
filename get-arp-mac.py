@@ -23,7 +23,7 @@ def multiple_replace(dict, text):
 def append_mac(show_mac, show_status):
     for mac_entry in show_mac:
         if device['device_type'] == 'cisco_ios':
-            port = multiple_replace(int_dict, mac_entry['destination_port'])
+            port = multiple_replace(int_dict, mac_entry['destination_port']) #Replace long interface names with short names (example: 'GigabitEthernet' to 'Gi')
             mac = mac_entry['destination_address']
             vlan =  mac_entry['vlan']
         elif device['device_type'] == 'cisco_nxos':
@@ -31,7 +31,7 @@ def append_mac(show_mac, show_status):
             mac = mac_entry['mac']
             vlan =  mac_entry['vlan']
         for status_entry in show_status:
-            if status_entry['port'] == port:
+            if status_entry['port'] == port: #Match interface from show interface status with show mac address-table to exctract relevant port description
                 des = status_entry['name']
                 mac_arp.append({'mac': mac, 'vlan': vlan, 'switch': name, 'port': port, 'description': des, 'IP': '', 'vrf': ''})
 
@@ -60,7 +60,7 @@ for device in device_list:
     ip = device['ip']
     device_type = device['device_type']
     print('Getting data from ' + device['host'])
-    #Connect to device using info from device.csv and entered credentials
+    #Connect to device using info from device.csv and entered credentials, handle timeout and authentication exceptions
     try:
         net_connect = Netmiko(ip=ip, username=username, password=password, device_type=device_type)
     except NetMikoTimeoutException as timeout_error:
@@ -73,10 +73,10 @@ for device in device_list:
         print(auth_error)
         print('*'*80)
         sys.exit(1)
-    #Collect arp data if arp cell is not empty
-    if device['arp'] != '':
-        #Get list of vrf
-        show_vrf = net_connect.send_command('show vrf', use_textfsm=True)
+    #Get list of vrf
+    show_vrf = net_connect.send_command('show vrf', use_textfsm=True)
+    #Check that data is list before continuing (error output will be str)
+    if (show_vrf) == list:
         #Get arp table for each vrf
         for vrf in show_vrf:
             vrf = vrf['name']
@@ -84,16 +84,15 @@ for device in device_list:
             #Check that data is list before appending (empty arp will be str)
             if type(show_arp) == list:
                 append_arp(show_arp)
-        #For IOS, get default route table
+        #For IOS, get default arp table
         if device_type == 'cisco_ios':
             vrf = 'default'
             show_arp = net_connect.send_command('show ip arp', use_textfsm=True)
             append_arp(show_arp)
-    #Collect mac data if mac cell is not empty
-    if device['mac'] != '':
-        show_mac = net_connect.send_command('show mac address-table', use_textfsm=True)
-        show_status = net_connect.send_command('show interface status', use_textfsm=True)
-        append_mac(show_mac, show_status)
+    #Collect show mac address-table and show interface status
+    show_mac = net_connect.send_command('show mac address-table', use_textfsm=True)
+    show_status = net_connect.send_command('show interface status', use_textfsm=True)
+    append_mac(show_mac, show_status)
     #Disconnect from device
     net_connect.disconnect()
 
